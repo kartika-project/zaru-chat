@@ -6,90 +6,34 @@
   <title>Zaru Chat</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <style>
-    * {
-      margin: 0; padding: 0; box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
-
-    body {
-      background-color: #f5f7fb;
-      display: flex; flex-direction: column; height: 100vh;
-    }
-
-    header {
-      background-color: #3f8efc;
-      color: white;
-      padding: 1rem;
-      font-size: 1.2rem;
-      text-align: center;
-      font-weight: 600;
-    }
-
-    #messages {
-      flex: 1;
-      padding: 1rem;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .message {
-      max-width: 60%;
-      padding: 0.7rem 1rem;
-      border-radius: 15px;
-      position: relative;
-      word-wrap: break-word;
-      line-height: 1.4;
-      font-size: 0.95rem;
-    }
-
-    .message.you {
-      background-color: #3f8efc;
-      color: white;
-      align-self: flex-end;
-      border-bottom-right-radius: 0;
-    }
-
-    .message.other {
-      background-color: #e3e9f3;
-      color: #333;
-      align-self: flex-start;
-      border-bottom-left-radius: 0;
-    }
-
-    form {
-      display: flex;
-      padding: 1rem;
-      background: white;
-      border-top: 1px solid #ccc;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: #f5f7fb; display: flex; flex-direction: column; height: 100vh; }
+    header { background: #3f8efc; color: white; padding: 1rem; font-size: 1.2rem; text-align: center; font-weight: 600; }
+    #messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .message { max-width: 60%; padding: 0.8rem 1rem; border-radius: 15px; word-wrap: break-word; font-size: 0.95rem; }
+    .you { background: #3f8efc; color: white; align-self: flex-end; border-bottom-right-radius: 0; }
+    .other { background: #e3e9f3; color: #333; align-self: flex-start; border-bottom-left-radius: 0; }
+    .name { font-size: 0.75rem; margin-bottom: 3px; font-weight: 600; color: #666; }
+    form { display: flex; padding: 1rem; background: white; border-top: 1px solid #ccc; }
     input[type="text"] {
       flex: 1;
-      padding: 0.7rem;
+      padding: 1rem 1.2rem;
       border: 1px solid #ccc;
-      border-radius: 10px;
+      border-radius: 12px;
       margin-right: 10px;
       font-size: 1rem;
-      min-height: 40px;
+      min-height: 48px;
     }
-
     button {
-      background-color: #3f8efc;
+      background: #3f8efc;
       border: none;
       color: white;
-      padding: 0 1rem;
+      padding: 0 1.2rem;
       border-radius: 10px;
       cursor: pointer;
       font-size: 1rem;
     }
-
-    @media (max-width: 600px) {
-      .message {
-        max-width: 80%;
-      }
-    }
+    @media (max-width: 600px) { .message { max-width: 80%; } }
   </style>
 </head>
 <body>
@@ -102,6 +46,7 @@
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
+    const username = prompt("Masukkan nama kamu:");
     const socket = io({ transports: ['websocket'] });
 
     const form = document.getElementById('chat-form');
@@ -110,22 +55,34 @@
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      if (input.value.trim()) {
-        socket.emit('message', input.value);
-        addMessage(input.value, 'you');
+      const text = input.value.trim();
+      if (text) {
+        socket.emit('message', { user: username, text });
+        addMessage(username, text, 'you');
         input.value = '';
       }
     });
 
-    socket.on('message', function (msg) {
-      addMessage(msg, 'other');
+    socket.on('message', function (data) {
+      if (data.user !== username) {
+        addMessage(data.user, data.text, 'other');
+      }
     });
 
-    function addMessage(msg, type) {
-      const item = document.createElement('div');
-      item.textContent = msg;
-      item.classList.add('message', type);
-      messages.appendChild(item);
+    function addMessage(user, text, type) {
+      const container = document.createElement('div');
+      container.classList.add('message', type);
+
+      const name = document.createElement('div');
+      name.classList.add('name');
+      name.textContent = user;
+
+      const content = document.createElement('div');
+      content.textContent = text;
+
+      container.appendChild(name);
+      container.appendChild(content);
+      messages.appendChild(container);
       messages.scrollTop = messages.scrollHeight;
     }
   </script>
