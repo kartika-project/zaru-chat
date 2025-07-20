@@ -2,22 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Zaru Chat</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <style>
     * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+      margin: 0; padding: 0; box-sizing: border-box;
       font-family: 'Inter', sans-serif;
     }
 
     body {
       background-color: #f5f7fb;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
+      display: flex; flex-direction: column; height: 100vh;
     }
 
     header {
@@ -76,6 +72,7 @@
       border-radius: 10px;
       margin-right: 10px;
       font-size: 1rem;
+      min-height: 40px;
     }
 
     button {
@@ -103,9 +100,7 @@
     <button>Send</button>
   </form>
 
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"
-    integrity="sha384-8YvrR3pIKFmsOdzkak1+axYuF0rR2VNTxBQQTjSpjyiZ1U6ZetdSl7Odnr4HgUSz"
-    crossorigin="anonymous"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
     const socket = io({ transports: ['websocket'] });
 
@@ -115,7 +110,7 @@
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      if (input.value) {
+      if (input.value.trim()) {
         socket.emit('message', input.value);
         addMessage(input.value, 'you');
         input.value = '';
