@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat Ringan</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+    #messages { border: 1px solid #ccc; height: 300px; overflow-y: scroll; background: white; padding: 10px; margin-bottom: 10px; }
+    .message { margin: 5px 0; padding: 8px 12px; border-radius: 10px; max-width: 70%; clear: both; }
+    .me { background-color: #cce5ff; text-align: right; float: right; }
+    .other { background-color: #e8e8e8; text-align: left; float: left; }
+    #input-box { display: flex; gap: 5px; }
+    input, button { padding: 10px; font-size: 1em; }
+  </style>
+</head>
+<body>
+  <h2>Chat Ringan</h2>
+  <div id="messages"></div>
+  <div id="input-box">
+    <input id="myMessage" type="text" placeholder="Ketik di sini..." />
+    <button onclick="sendMessage()">Kirim</button>
+  </div>
+
+  <script>
+    const socket = io();
+    let username = prompt("Masukkan nama kamu:");
+    if (!username) username = "Anonim";
+
+    function sendMessage() {
+      const input = document.getElementById('myMessage');
+      const text = input.value.trim();
+      if (text) {
+        const fullMsg = { name: username, text: text };
+        socket.emit('message', fullMsg);
+        input.value = '';
+      }
+    }
+
+    socket.on('message', function(data) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'message ' + (data.name === username ? 'me' : 'other');
+      msgDiv.textContent = `${data.name}: ${data.text}`;
+      const box = document.getElementById('messages');
+      box.appendChild(msgDiv);
+      box.scrollTop = box.scrollHeight;
+    });
+
+    document.getElementById('myMessage').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
+</body>
+</html>
