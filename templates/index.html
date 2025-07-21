@@ -1,89 +1,151 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Zaru Chat</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <title>C:\Windows\System32\cmd.exe</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-    body { background: #f5f7fb; display: flex; flex-direction: column; height: 100vh; }
-    header { background: #3f8efc; color: white; padding: 1rem; font-size: 1.2rem; text-align: center; font-weight: 600; }
-    #messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-    .message { max-width: 60%; padding: 0.8rem 1rem; border-radius: 15px; word-wrap: break-word; font-size: 0.95rem; }
-    .you { background: #3f8efc; color: white; align-self: flex-end; border-bottom-right-radius: 0; }
-    .other { background: #e3e9f3; color: #333; align-self: flex-start; border-bottom-left-radius: 0; }
-    .name { font-size: 0.75rem; margin-bottom: 3px; font-weight: 600; color: #666; }
-    form { display: flex; padding: 1rem; background: white; border-top: 1px solid #ccc; }
-    input[type="text"] {
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: black;
+      color: #00ff00;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .cmd-window {
+      width: 90%;
+      max-width: 900px;
+      height: 90vh;
+      border: 2px solid #00ff00;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 10px #00ff00;
+    }
+
+    .cmd-header {
+      background-color: #111;
+      padding: 5px 10px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #00ff00;
+    }
+
+    #messages {
       flex: 1;
-      padding: 1rem 1.2rem;
-      border: 1px solid #ccc;
-      border-radius: 12px;
-      margin-right: 10px;
+      padding: 1rem;
+      overflow-y: auto;
+      white-space: pre-wrap;
       font-size: 1rem;
-      min-height: 48px;
+      line-height: 1.5;
     }
-    button {
-      background: #3f8efc;
-      border: none;
-      color: white;
-      padding: 0 1.2rem;
-      border-radius: 10px;
-      cursor: pointer;
+
+    #typing-indicator {
+      color: #008800;
+    }
+
+    #input-line {
+      min-height: 40px;
+      padding: 1rem;
+      outline: none;
+      background: black;
+      color: #00ff00;
+      font-family: 'Courier New', monospace;
       font-size: 1rem;
+      border-top: 1px solid #00ff00;
+      white-space: pre-wrap;
+      position: relative;
     }
-    @media (max-width: 600px) { .message { max-width: 80%; } }
+
+    .cursor::after {
+      content: '█';
+      animation: blink 1s steps(1) infinite;
+      margin-left: 2px;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    ::selection {
+      background: #00ff00;
+      color: black;
+    }
   </style>
 </head>
 <body>
-  <header>Zaru Chat</header>
-  <div id="messages"></div>
-  <form id="chat-form">
-    <input id="message" autocomplete="off" placeholder="Type a message..." />
-    <button>Send</button>
-  </form>
+  <div class="cmd-window">
+    <div class="cmd-header">C:\Windows\System32\cmd.exe</div>
+    <div id="messages"></div>
+    <div id="input-line" contenteditable="true" spellcheck="false"></div>
+  </div>
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
-    const username = prompt("Masukkan nama kamu:");
+    const username = prompt("Masukkan nama kamu:") || "User";
     const socket = io({ transports: ['websocket'] });
 
-    const form = document.getElementById('chat-form');
-    const input = document.getElementById('message');
     const messages = document.getElementById('messages');
+    const inputLine = document.getElementById('input-line');
+    let typingTimeout;
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const text = input.value.trim();
-      if (text) {
-        socket.emit('message', { user: username, text });
-        addMessage(username, text, 'you');
-        input.value = '';
+    inputLine.classList.add('cursor');
+    inputLine.focus();
+
+    inputLine.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const text = inputLine.innerText.trim();
+        if (text) {
+          socket.emit('message', { user: username, text });
+          appendMessage(username, text);
+          inputLine.innerText = '';
+        }
+      } else {
+        socket.emit('typing', username);
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+          socket.emit('typing', null);
+        }, 2000);
       }
     });
 
     socket.on('message', function (data) {
       if (data.user !== username) {
-        addMessage(data.user, data.text, 'other');
+        removeTyping();
+        appendMessage(data.user, data.text);
       }
     });
 
-    function addMessage(user, text, type) {
-      const container = document.createElement('div');
-      container.classList.add('message', type);
+    socket.on('typing', function (name) {
+      removeTyping();
+      if (name && name !== username) {
+        const line = document.createElement('div');
+        line.id = 'typing-indicator';
+        line.textContent = `C:\\Users\\${name}> sedang mengetik...`;
+        messages.appendChild(line);
+        messages.scrollTop = messages.scrollHeight;
+      }
+    });
 
-      const name = document.createElement('div');
-      name.classList.add('name');
-      name.textContent = user;
-
-      const content = document.createElement('div');
-      content.textContent = text;
-
-      container.appendChild(name);
-      container.appendChild(content);
-      messages.appendChild(container);
+    function appendMessage(user, text) {
+      const line = document.createElement('div');
+      line.textContent = `C:\\Users\\${user}> ${text}`;
+      messages.appendChild(line);
       messages.scrollTop = messages.scrollHeight;
+    }
+
+    function removeTyping() {
+      const typing = document.getElementById('typing-indicator');
+      if (typing) typing.remove();
     }
   </script>
 </body>
