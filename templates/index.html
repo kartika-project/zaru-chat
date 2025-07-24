@@ -52,7 +52,7 @@
     }
 
     #input-line {
-      min-height: 40px;
+      min-height: 50px;
       padding: 1rem;
       outline: none;
       background: black;
@@ -97,6 +97,15 @@
     const inputLine = document.getElementById('input-line');
     let typingTimeout;
 
+    // 🔊 Suara Notifikasi
+    const sound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-message-pop-alert-2354.mp3");
+
+    // 📵 Deteksi apakah tab aktif
+    let isActive = true;
+    window.addEventListener("focus", () => { isActive = true; });
+    window.addEventListener("blur", () => { isActive = false; });
+
+    // Ketik pesan
     inputLine.classList.add('cursor');
     inputLine.focus();
 
@@ -122,6 +131,10 @@
       if (data.user !== username) {
         removeTyping();
         appendMessage(data.user, data.text);
+        if (!isActive) {
+          showNotification(data.user);
+          sound.play();
+        }
       }
     });
 
@@ -146,6 +159,19 @@
     function removeTyping() {
       const typing = document.getElementById('typing-indicator');
       if (typing) typing.remove();
+    }
+
+    // 🔔 Notifikasi Desktop
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+
+    function showNotification(user) {
+      if (Notification.permission === "granted") {
+        new Notification(`${user} mengirimkan anda pesan`, {
+          icon: "https://cdn-icons-png.flaticon.com/512/2950/2950661.png"
+        });
+      }
     }
   </script>
 </body>
